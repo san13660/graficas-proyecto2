@@ -68,17 +68,17 @@ def glize(node):
             glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm.value_ptr(projection)
         )
 
-        diffuse = mesh.material.properties['diffuse']
+        #diffuse = mesh.material.properties['diffuse']
 
         glUniform4f(
             glGetUniformLocation(shader, "color"),
-            *diffuse,
+            *shader_color,
             1
         )
 
         glUniform4f(
             glGetUniformLocation(shader, "light"),
-            0, 10, 10, 1
+            4, 10, 4, 20
         )
 
         glDrawElements(GL_TRIANGLES, len(index_data), GL_UNSIGNED_INT, None)
@@ -89,6 +89,7 @@ def glize(node):
 def process_input():
     global camera_angle
     global camera_distance
+    global shader_color
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
@@ -97,18 +98,31 @@ def process_input():
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             elif event.key == pygame.K_f:
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+            if event.key == pygame.K_1:
+                shader_color = (0.9,0.9,1)
+            if event.key == pygame.K_2:
+                shader_color = (1,0.6,0.2)
+            if event.key == pygame.K_3:
+                shader_color = (0.3,0.3,0.6)
+
             if event.key == pygame.K_LEFT:
                 camera_angle -= 0.1
             if event.key == pygame.K_RIGHT:
                 camera_angle += 0.1
             if event.key == pygame.K_UP:
-                camera_distance -= 2
+                if camera_distance > 16:
+                    camera_distance -= 1
             if event.key == pygame.K_DOWN:
-                camera_distance += 2
+                if camera_distance < 41:
+                    camera_distance += 1
             if event.key == pygame.K_a:
-                camera.y += 2
+                if camera.y < 20:
+                    camera.y += 2
             if event.key == pygame.K_z:
-                camera.y -= 2
+                if camera.y > 0:
+                    camera.y -= 2
+                
 
 clock = pygame.time.Clock()
 
@@ -133,22 +147,23 @@ glViewport(0, 0, 800, 600)
 
 camera_angle = 0.0
 camera_distance = 35
-camera = glm.vec3(0, 0, camera_distance)
+camera = glm.vec3(0, 5, camera_distance)
+
+shader_color = (1,1,1)
 
 scene = pyassimp.load('hyrule_castle.obj')
 
 while True:
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
 
-    view = glm.lookAt(camera, glm.vec3(0, 0, 0), glm.vec3(0, 1, 0))
+    view = glm.lookAt(camera, glm.vec3(0,0,0), glm.vec3(0, 1, 0))
 
     glize(scene.rootnode)
 
     pygame.display.flip()
 
+    process_input()
     camera.x = sin(camera_angle) * camera_distance
     camera.z = cos(camera_angle) * camera_distance
-
-    process_input()
 
     clock.tick(15)
